@@ -1,49 +1,52 @@
-# Repro Tilt (Local Dev)
+# Repro Tilt (Full Local Dev)
 
-Centralized Tilt setup for all Repro projects (excluding SDKs). It runs core services plus demo apps, with a shared local MongoDB.
+This Tilt setup always runs the full local stack for repos in `../`:
 
-**Prereqs**
-1. Docker (for Mongo)
+- Infra: MongoDB, Kafka, Kafka UI, ClickHouse
+- SDK pipelines: `node-sdk` and `react-sdk` in watch mode
+- Apps: `repro-api`, `repro-web`, `log-collector`, `repro-demo` backend + frontend
+
+## Prerequisites
+
+1. Docker
 2. Tilt
-3. Node + npm (for JS apps)
-4. Python (for `repro-ai`) (experimental)
+3. Node.js + npm
 
-**Quick Start**
-1. `cd repro-tilt`
+## Quick Start
+
+1. `cd tilt`
 2. `tilt up`
 
-**Core Services**
-- `repro-api` — http://localhost:4010/api/docs
-- `repro-ai` — http://localhost:8000/docs
-- `repro-web` — http://localhost:5174
+No profiles/modes are required. This always starts the full environment.
 
-**Demo Apps**
-- `repro-demo-backend` — http://localhost:3008
-- `repro-demo-web` — http://localhost:5173
-- `repro-demo-next` — http://localhost:3000
-- `repro-demo-node-e2e` — http://localhost:3001
-- `repro-demo-nest-e2e` — http://localhost:3002
-- `repro-demo-react-e2e` — http://localhost:5175
-- `repro-demo-nest-react-e2e` — http://localhost:5176
+## Resources
 
-**Mongo**
-- Connection: `mongodb://localhost:27017`
-- Databases used:
-  1. `repro` (core services)
-  2. `taskflow` (demo backend)
-  3. `repro-e2e` (demo e2e apps)
+- `infra` (docker compose): MongoDB + Kafka + Kafka UI + ClickHouse
+- `node-sdk`: initial build + TypeScript watch build
+- `react-sdk`: initial build + TypeScript watch build
+- `log-collector`: Fastify ingest service (`http://localhost:8080/health/live`)
+- `repro-api`: Nest API (`http://localhost:4010/api/docs`)
+- `repro-web`: web console (`http://localhost:5174`)
+- `repro-demo-backend`: TaskFlow backend (`http://localhost:3008`)
+- `repro-demo-web`: TaskFlow frontend (`http://localhost:5173`)
 
-**Grouping (Labels)**
-- `infra`: mongo
-- `core`: repro-api, repro-ai, repro-web
-- `demo`: all `repro-demo-*`
+## SDK Live Dev Behavior
 
-**Env Loading**
-Each service loads its local `.env` and `.env.local` (if present) before running. Tilt then sets required overrides (e.g. `MONGO_URI`, `PORT`) to keep everything consistent.
+- `repro-demo/backend` depends on `node-sdk` and restarts when `node-sdk/dist/index.js` changes.
+- `repro-demo` frontend depends on `react-sdk` and auto-restarts in Tilt when `react-sdk/dist` changes.
 
-**Change Ports**
-Edit the `PORTS` map in `repro-tilt/Tiltfile`. All links and dependent envs derive from it.
+## Ports
 
-**Common Issues**
-- `EADDRINUSE`: a port is already in use. Change `PORTS` or stop the conflicting process.
-- `command not found`: install deps in that repo (e.g. `npm install` or `pip install -e .`).
+- MongoDB: `27017`
+- Kafka: `9092`
+- Kafka UI: `8081`
+- ClickHouse HTTP/native: `8123` / `9000`
+- Log Collector: `8080`
+- Repro API: `4010`
+- Repro Web: `5174`
+- Repro Demo backend/frontend: `3008` / `5173`
+
+## Notes
+
+- Each app command sources local `.env` and `.env.local` before Tilt overrides local dev defaults.
+- Edit ports and URLs via the `PORTS` map in `tilt/Tiltfile`.
